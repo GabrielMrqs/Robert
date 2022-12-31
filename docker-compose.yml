@@ -1,0 +1,40 @@
+version: '3.4'
+
+services:
+  robertmq.api:
+    container_name: 'robertmq.api'
+    image: ${DOCKER_REGISTRY-}robertmqapi
+    build:
+      context: .
+      dockerfile: RobertMQ.API/Dockerfile
+    depends_on:
+      - rabbitmq
+
+  robertmq.receiverworker:
+    container_name: 'robertmq.receiverworker'
+    image: ${DOCKER_REGISTRY-}robertmqreceiverworker
+    build:
+      context: .
+      dockerfile: RobertMQ.ReceiverWorker/Dockerfile
+    depends_on:
+      - rabbitmq
+      
+  robertmq.senderworker:
+    container_name: 'robertmq.senderworker'
+    image: ${DOCKER_REGISTRY-}robertmqsenderworker
+    build:
+      context: .
+      dockerfile: RobertMQ.SenderWorker/Dockerfile
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    container_name: 'rabbitmq'
+    image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=pass
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+
