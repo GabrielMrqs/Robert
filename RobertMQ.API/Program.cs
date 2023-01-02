@@ -1,15 +1,17 @@
-using RobertMQ.API.Services;
+using NServiceBus;
+using RobertMQ.API.Extensions;
+using RobertMQ.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen();
-builder.Services.AddScoped<IMessageProducer, MessageProducer>();
+
+builder.Host.ConfigureNServiceBus();
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -18,25 +20,24 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapPost("a", (IMessageProducer _messageProducer) =>
+app.MapGet("ping", async (IMessageSession _messageSession) =>
 {
-    var message = new Message("ping");
-    _messageProducer.SendMessage(message);
-}).WithName("a");
+    await _messageSession
+          .Send(new Ping())
+          .ConfigureAwait(false);
+
+    return "deu boa";
+
+}).WithName("ping");
+
+app.MapGet("supermessage", async (IMessageSession _messageSession) =>
+{
+    await _messageSession
+          .Send(new SuperMessage() { Message = "oiiii" })
+          .ConfigureAwait(false);
+
+    return "deu boa";
+
+}).WithName("supermessage");
 
 app.Run();
-
-class Message
-{
-    public string Text { get; set; }
-
-    public Message(string text)
-    {
-        Text = text;
-    }
-
-    public override string ToString()
-    {
-        return Text;
-    }
-}
